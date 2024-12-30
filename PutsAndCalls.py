@@ -17,7 +17,7 @@ def calculate_put_returns(strike_price, premium, current_price, contract_size=10
         dict: Contains data for graphing returns.
     """
     # Generate a range of stock prices for visualization
-    prices = np.linspace(current_price * 0.5, current_price * 1.5, 100)
+    prices = np.linspace(current_price * 0.1, current_price * 2.0, 200)
 
     # Calculate profit/loss for each price point
     profit_loss = np.where(
@@ -45,13 +45,13 @@ def calculate_call_returns(strike_price, premium, current_price, contract_size=1
         dict: Contains data for graphing returns.
     """
     # Generate a range of stock prices for visualization
-    prices = np.linspace(current_price * 0.5, current_price * 1.5, 100)
+    prices = np.linspace(current_price * 0.1, current_price * 2.0, 200)
 
     # Calculate profit/loss for each price point
     profit_loss = np.where(
         prices <= strike_price,
         premium * contract_size,
-        (strike_price - prices + premium) * contract_size
+        (premium + (strike_price - current_price)) * contract_size
     )
 
     return {
@@ -74,22 +74,24 @@ def graph_returns(prices, profit_loss, current_price, strike_price, premium, tit
     break_even = strike_price - premium
     current_profit_loss = np.interp(current_price, prices, profit_loss)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(prices, profit_loss, label="Profit/Loss", color="blue")
-    plt.axhline(0, color="black", linewidth=1.5, label="Zero Line")
-    plt.axhline(premium * 100, color="green", linestyle="--", label="Premium Received")
-    plt.axvline(current_price, color="red", linestyle="--", linewidth=1.5, label="Current Stock Price")
-    plt.fill_between(prices, profit_loss, where=(prices >= break_even), color='green', alpha=0.1, label="Profit Zone")
-    plt.fill_between(prices, profit_loss, where=(prices < break_even), color='red', alpha=0.1, label="Loss Zone")
-    plt.scatter([current_price], [current_profit_loss], color="red", label="Current Price", zorder=5)
-    plt.scatter([break_even], [0], color="orange", label="Break-even", zorder=5)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(prices, profit_loss, label="Profit/Loss", color="blue")
+    ax.axhline(0, color="black", linewidth=1.5, label="Zero Line")
+    ax.axhline(premium * 100, color="green", linestyle="--", label="Premium Received")
+    ax.axvline(current_price, color="red", linestyle="--", linewidth=1.5, label="Current Stock Price")
+    ax.axvline(break_even, color="orange", linestyle="--", linewidth=1.5, label="Break-even Point")
+    ax.fill_between(prices, profit_loss, where=(prices >= break_even), color='green', alpha=0.1, label="Profit Zone")
+    ax.fill_between(prices, profit_loss, where=(prices < break_even), color='red', alpha=0.1, label="Loss Zone")
+    ax.scatter([current_price], [current_profit_loss], color="red", label="Current Price", zorder=5)
+    ax.scatter([break_even], [0], color="orange", label="Break-even", zorder=5)
 
-    plt.title(title)
-    plt.xlabel("Stock Price ($)")
-    plt.ylabel("Profit/Loss ($)")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    ax.set_title(title)
+    ax.set_xlabel("Stock Price ($)")
+    ax.set_ylabel("Profit/Loss ($)")
+    ax.legend()
+    ax.grid(True)
+
+    return fig
 
 # Streamlit app
 def main():
@@ -111,13 +113,14 @@ def main():
             results = calculate_call_returns(strike_price, premium, current_price)
             title = "Covered Call Returns"
 
-        st.write("### Profit/Loss Data")
-        st.line_chart(
-            pd.DataFrame({"Price": results["prices"], "Profit/Loss": results["profit_loss"]}).set_index("Price")
-        )
+                # Render the matplotlib graph in Streamlit
+        fig = graph_returns(results["prices"], results["profit_loss"], current_price, strike_price, premium, title)
+        st.pyplot(fig)
 
-        # Graph the returns with the current price marked and additional details
-        graph_returns(results["prices"], results["profit_loss"], current_price, strike_price, premium, title)
+        # Display Profit/Loss Data
+        st.write("### Profit/Loss Data")
+        df = pd.DataFrame({"Price": results["prices"], "Profit/Loss": results["profit_loss"]}).set_index("Price")
+        st.write(df)
 
 if __name__ == "__main__":
     main()
