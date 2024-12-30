@@ -3,7 +3,7 @@ import numpy as np
 import streamlit as st
 import pandas as pd
 
-def calculate_put_returns(strike_price, premium, current_price, contract_size=100):
+def calculate_put_returns(strike_price, premium, current_price, contract_size):
     """
     Calculate returns of a cash-secured put given the inputs.
 
@@ -31,7 +31,7 @@ def calculate_put_returns(strike_price, premium, current_price, contract_size=10
         "profit_loss": profit_loss
     }
 
-def calculate_call_returns(strike_price, premium, current_price, contract_size=100):
+def calculate_call_returns(strike_price, premium, current_price, contract_size):
     """
     Calculate returns of a covered call given the inputs.
 
@@ -59,7 +59,7 @@ def calculate_call_returns(strike_price, premium, current_price, contract_size=1
         "profit_loss": profit_loss
     }
 
-def graph_returns(prices, profit_loss, current_price, strike_price, premium, title):
+def graph_returns(prices, contract_size, profit_loss, current_price, strike_price, premium, title):
     """
     Plot the profit/loss graph for options with additional details.
 
@@ -74,7 +74,7 @@ def graph_returns(prices, profit_loss, current_price, strike_price, premium, tit
     current_profit_loss = np.interp(current_price, prices, profit_loss)
 
     # Calculate stock-only returns
-    stock_returns = (prices - current_price) * 100  # Assuming 100 shares
+    stock_returns = (prices - current_price) * 100*contract_size
 
     # Calculate break-even point
     break_even = strike_price - premium if title == "Cash-Secured Put Returns" else current_price - premium
@@ -127,20 +127,21 @@ def main():
     option_type = st.selectbox("Select Option Type", ["Cash-Secured Put", "Covered Call"])
 
     # Inputs from user
+    contract_size = st.number_input("Number of Contracts ", min_value=1, step=1)
     strike_price = st.number_input("Strike Price ($)", min_value=1.0, step=0.1)
     premium = st.number_input("Premium Received ($)", min_value=0.1, step=0.1)
     current_price = st.number_input("Current Stock Price ($)", min_value=1.0, step=0.1)
 
     if st.button("Calculate Returns"):
         if option_type == "Cash-Secured Put":
-            results = calculate_put_returns(strike_price, premium, current_price)
+            results = calculate_put_returns(strike_price, premium, current_price, contract_size*100)
             title = "Cash-Secured Put Returns"
         else:
-            results = calculate_call_returns(strike_price, premium, current_price)
+            results = calculate_call_returns(strike_price, premium, current_price, contract_size*100)
             title = "Covered Call Returns"
 
         # Render the matplotlib graph in Streamlit
-        fig = graph_returns(results["prices"], results["profit_loss"], current_price, strike_price, premium, title)
+        fig = graph_returns(results["prices"], contract_size, results["profit_loss"], current_price, strike_price, premium, title)
         st.pyplot(fig)
 
         # Display Profit/Loss Data
