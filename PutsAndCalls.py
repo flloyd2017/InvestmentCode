@@ -76,17 +76,24 @@ def graph_returns(prices, profit_loss, current_price, strike_price, premium, tit
     # Calculate stock-only returns
     stock_returns = (prices - current_price) * 100  # Assuming 100 shares
 
+    # Calculate break-even point
+    break_even = strike_price - premium if title == "Cash-Secured Put Returns" else current_price - premium
+
     if title == "Covered Call Returns":
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(prices, profit_loss, label="Options Profit/Loss", color="blue")
         ax.plot(prices, stock_returns, label="Stock-Only Returns", color="purple", linestyle="--")
-        ax.axhline(0, color="black", linewidth=1.5, label="Zero Line")
+        ax.axhline(0, color="black", linewidth=1.5)
         ax.axvline(current_price, color="red", linestyle="--", linewidth=1.5, label="Current Stock Price")
         ax.axvline(strike_price, color="orange", linestyle="--", linewidth=1.5, label="Strike Price")
-        ax.fill_between(prices, stock_returns, profit_loss, where=(stock_returns < profit_loss) & (profit_loss > 0), color='green', alpha=0.1, label="Nailed it")
-        ax.fill_between(prices, stock_returns, profit_loss, where=(stock_returns > profit_loss), color='orange', alpha=0.2, label="Shoud've Just Held It")
-        ax.fill_between(prices, profit_loss, 0, where=(profit_loss < 0), color='red', alpha=0.1, label="Should've Just Sold It")
-        ax.scatter([current_price], [current_profit_loss], color="red", label="Current Price", zorder=5)
+        ax.axvline(break_even, color="green", linestyle="--", linewidth=1.5)
+        #ax.axvline(break_even, color="green", linestyle="--", linewidth=1.5, label="Break-Even Point")
+        #ax.text(break_even, 0, f"Break-Even: {break_even:.2f}", color="green", fontsize=10, verticalalignment='bottom')
+        ax.fill_between(prices, stock_returns, profit_loss, where=(stock_returns < profit_loss) & (profit_loss > 0), color='green', alpha=0.2, label="Nailed it")
+        ax.fill_between(prices, stock_returns, profit_loss, where=(stock_returns > profit_loss), color='orange', alpha=0.2, label="Should've Just Held It")
+        ax.fill_between(prices, profit_loss, 0, where=(profit_loss < 0), color='red', alpha=0.2, label="Should've Just Sold It")
+        ax.scatter([current_price], [current_profit_loss], color="red", label=f"Current Price: {current_price:.2f}", zorder=5)
+        ax.scatter(break_even, 0 , color="green", label=f"Break-Even: {break_even:.2f}", zorder=6)
 
     if title == "Cash-Secured Put Returns":
         # Calculate stock-only returns
@@ -94,14 +101,15 @@ def graph_returns(prices, profit_loss, current_price, strike_price, premium, tit
 
         fig, ax = plt.subplots(figsize=(10, 6))
         ax.plot(prices, profit_loss, label="Options Profit/Loss", color="blue")
-        ax.plot(prices, stock_returns, label="Stock-Only Returns", color="purple", linestyle="--")
-        ax.axhline(0, color="black", linewidth=1.5, label="Zero Line")
-        ax.axvline(current_price, color="red", linestyle="--", linewidth=1.5, label="Current Stock Price")
+        ax.axhline(0, color="black", linewidth=1.5)
+        ax.axvline(current_price, color="red", linestyle="--", linewidth=1.5)
         ax.axvline(strike_price, color="orange", linestyle="--", linewidth=1.5, label="Strike Price")
-        ax.fill_between(prices, profit_loss, 0 , where=(profit_loss > 0), color='green', alpha=0.1, label="Nailed it")
-        ax.fill_between(prices, stock_returns, profit_loss, where=(stock_returns > profit_loss), color='orange', alpha=0.2, label="Shoud've Just Bought It")
-        ax.fill_between(prices, profit_loss, 0, where=(profit_loss < 0), color='red', alpha=0.1, label="Should've Just  It")
-        ax.scatter([current_price], [current_profit_loss], color="red", label="Current Price", zorder=5)
+        ax.axvline(break_even, color="green", linestyle="--", linewidth=1.5)
+        #ax.text(break_even, 0, f"{break_even:.2f}", color="green", fontsize=10, verticalalignment='bottom')
+        ax.fill_between(prices, profit_loss, 0 , where=(profit_loss > 0), color='green', alpha=0.2, label="Profit Zone")
+        ax.fill_between(prices, profit_loss, 0, where=(profit_loss < 0), color='red', alpha=0.2, label="Loss Zone")
+        ax.scatter([current_price], [current_profit_loss], color="red", label=f"Current Price: {current_price:.2f}", zorder=5)
+        ax.scatter(break_even, 0 , color="green", label=f"Break-Even: {break_even:.2f}", zorder=6)
 
     ax.set_title(title)
     ax.set_xlabel("Stock Price ($)")
