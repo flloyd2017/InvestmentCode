@@ -76,8 +76,9 @@ def graph_returns(prices, profit_loss, current_price, strike_price, premium, tit
 
     plt.figure(figsize=(10, 6))
     plt.plot(prices, profit_loss, label="Profit/Loss", color="blue")
-    plt.axhline(0, color="black", linewidth=0.8, linestyle="--", label="Break-even Line")
+    plt.axhline(0, color="black", linewidth=1.5, label="Zero Line")
     plt.axhline(premium * 100, color="green", linestyle="--", label="Premium Received")
+    plt.axvline(current_price, color="red", linestyle="--", linewidth=1.5, label="Current Stock Price")
     plt.fill_between(prices, profit_loss, where=(prices >= break_even), color='green', alpha=0.1, label="Profit Zone")
     plt.fill_between(prices, profit_loss, where=(prices < break_even), color='red', alpha=0.1, label="Loss Zone")
     plt.scatter([current_price], [current_profit_loss], color="red", label="Current Price", zorder=5)
